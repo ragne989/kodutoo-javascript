@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="et">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trips-Traps-Trull</title>
+    <style>
+        html {
+            text-align: center;
+        }
+
+        table {
+            border-spacing: 3px;
+            margin: 20px auto;
+        }
+
+        table td {
+            border: 1px solid #e8e8e8;
+            border-radius: 3px;
+            text-align: center;
+            height: 40px;
+            min-width: 40px;
+            max-width: 40px;
+            font-size: 30px;
+        }
+
+        table td:hover {
+            cursor: pointer;
+            background-color: lightgray;
+        }
+
+        #game-result {
+            font-weight: bold;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div id="wrapper">
+        <h1>Trips-Traps-Trull</h1>
+        <div id="game-container"></div>
+        <p id="game-result"></p>
+        <button id="game-restart" onclick="window.location.reload();" title="Taaskäivita mäng">&#8635;</button>
+    </div>
+
+    <script>
+        const USER_CHARACTER = '&times;'; // Kasutaja käigu sümbol mängulaual.
+        const AI_CHARACTER = '&#9675;'; // AI (Artificial Intelligence) käigu sümbol mängulaual.
+
+        /**
+         * 2D massiiv mängulaua käikude talletamiseks. See on mängu tõe allikaks - kõik otsused tehakse selle massiivi alusel.
+         * Algväärtustena on kõik 2. taseme massiivide elementide väärtusteks tühi string. Hiljem populeeritakse vastavalt käikudele kasutaja või AI sümboliga. 
+         **/
+        const BOARD = [
+            ['', '', ''],
+            ['', '', ''],
+            ['', '', '']
+        ];
+
+        const UI_GAME_TABLE = createGameTable(); // <table> element UI-s (User Interface) / kasutajaliideses.
+        let moveCount = 0; // Mängus tehtud käikude koguarvu talletamiseks. Klassikalises Trips-Traps-Trullis on 3 x 3 ruudustik = max. 9 käiku. Algväärtus 0, mängu käigus suurendatakse seda muutujat iga sooritatud käiguga.
+
+        /**
+         * Funktsioon HTML <table> elemendi loomiseks õige koguse ridade ja lahtritega.
+         * Siin seatakse lahtritele ID leitavuse lihtsustamiseks ja ka "click" sündmuse kuulamine.
+         **/
+        function createGameTable() {
+            const gameTable = document.createElement('table'); // Loo HTML <table> element (antud hetkel kasutajale nähtamatu, kuna pole lisatud DOM'i)
+
+            for (let i = 0; i < 3; i++) { // Esimene tsükkel ridade loomiseks
+                const row = gameTable.insertRow(-1); // -1 indeks ütleb, et lisa rida tabeli lõppu
+                for (let j = 0; j < 3; j++) { // Teine tsükkel lahtrite loomiseks reale
+                    const cell = row.insertCell(-1); // -1 indeks ütleb, et lisa lahter tabeli rea lõppu
+                    cell.id = `${i}${j}`; // Paneme lahtritele (HTML table <td> element) ID vastavalt loogikale: 1. number on rea ja 2. number on lahtri indeks. Selle loogika alusel on lihtne elementi ID järgi hiljem leida. Ühtlasi on ID mänguvälja koordinaadiks massiivis.
+                    cell.addEventListener('click', handleCellClick); // Kuulame lahtri "click" eventi, mille handleriks on handleCellClick funktsioon
+                }
+            }
+
+            document.getElementById('game-container').appendChild(gameTable); // Lisab <table> elemendi DOM'i e teeb loodud tabeli kasutajale nähtavaks.
+            return gameTable; // Funktsioon tagastab loodud <table> elemendi
+        }
+
+        /**
+         * Funktsioon <td> elemendi "click" sündmuse protsessimiseks.
+         * Siin toimub suurem osa mängu seisu kontrollist. 
+         **/
+        function handleCellClick(event) {
+            const [x, y] = event.target.id.split(''); // Event handler funktsioonile antakse alati kaasa "event" objekt. Meid huvitab selle evendi target elemendi ID e tabeli lahtri <td> ID attribuut
+
+            // Kontrolli ega see lahter pole juba varasema käiguga kasutatud või mäng juba lõppenud. Kui üks on tõene, siis ignoreeri klikki.
+            if (isCellPopulated(x, y) || isGameOver()) {
+                return;
+            }
+
+            // Lisa kasutaja käik massiivi ja tee käik kasutajaliideses nähtavaks
+            populateTableCell(x, y, USER_CHARACTER);
+
+            // Kontrollime ega mäng pole lõppenud (viiki ja võitjat pole)
+            if (!isGameOver()) {
+                AImove(); // Tehisintellekti käik
+            }
+
+            // Kontrollime kas mäng on läbi (viik või võitja tuvastatud)
+            if (isGameOver()) {
+                showGameResult(getWinner());
+            }
+        }
+
+        /*
+        * Tehisintellekti käik.
+        */
+        function AImove() {
+            const [x, y] = getNextMove(); // Sobiva lahtri koordinaadid (ES destructuring assignment)
+            if (x !== undefined && y !== undefined) {
+                populateTableCell(x, y, AI_CHARACTER); // Populeerime lahtri vastava sümboliga
+            }
+        }
+
+        /**
+         * Tehisintellekti käikude loogika.
+         **/
+        function getNextMove() {
+
+            // 1. Proovime alati mänguvälja keskmist lahtrit, kui see on vaba kasuta seda
+            if (!isCellPopulated(1, 1)) {
+                return [1, 1];
+            }
+
+            // 2. Proovime nurki, kui mõni on vaba, siis vali üks suvaline
+            const cornerCoordinates = [[0, 0], [0, 2], [2, 0], [2, 2]]; // Nurkade koordinaadid
+            const availableCorners = []; // Vabad nurgad
+
+            for (let i = 0; i < cornerCoordinates.length; i++) { // Kontrolli kõiki vabu nurkasid
+                const [x, y] = cornerCoordinates[i];
+                // Kontrolli kas nurk on vaba
+                if (!isCellPopulated(x, y)) {
+                    availableCorners.push(cornerCoordinates[i]); // Lisa vabade nurkade massiivi
+                }
+            }
+
+            // Kasuta suvalist nurka kui mõni nurk on veel vaba
+            if (availableCorners.length > 0) {
+                return availableCorners[Math.floor(Math.random() * availableCorners.length)];
+            }
+
+            let availableCells = []; // massiiv kõikide vabade lahtrite hoidmiseks
+
+            // 3. Kõik vabad lahtrid. Tsükkel käib kõik lahtrid läbi ja kogub kokku kõik vabad lahtrid
+            for (let i = 0; i < BOARD.length; i++) {
+                const column = BOARD[i];
+                for (let j = 0; j < column.length; j++) {
+                    // Kontrolli kas lahter on vaba
+                    if (!isCellPopulated(i, j)) {
+                        availableCells.push([i, j]);
+                    }
+                }
+            }
+
+            // Kui ühtegi vaba lahtrit ei ole, tagastab null'i
+            if (availableCells.length === 0) {
+                return null;
+            }
+
+            // Tagastab kõigi saadaolevate lahtrite seast suvalise
+            return availableCells[Math.floor(Math.random() * availableCells.length)];
+        }
+
+
+        /**
+         * Võitja tuvastamine.
+         **/
+        function getWinner() {
+
+            // Kontrolli kas mõni sümbol täidab mänguväljal terve rea
+            const rowStrikeCharacter = getRowStrikeCharacter();
+            if (rowStrikeCharacter !== null) {
+                return rowStrikeCharacter;
+            }
+
+            // Kontrolli kas mõni sümbol täidab mänguväljal terve tulba
+            const columnStrikeCharacter = getColumnStrikeCharacter();
+            if (columnStrikeCharacter !== null) {
+                return columnStrikeCharacter;
+            }
+
+            // Kontrolli kas mõni sümbol täidab mänguväljal ühe diagonaalidest
+            const diagonalStrikeCharacter = getDiagonalStrikeCharacter();
+            if (diagonalStrikeCharacter !== null) {
+                return diagonalStrikeCharacter;
+            }
+
+            return null; // Ükski võiduks vajalik täistabamuse konditsioon mänguväljal ei ole täidetud, tagasta null
+        }
+
+
+        /* 
+        * Mängu lõpu kontroll.
+        */
+        function isGameOver() {
+            // Mäng on läbi kui võimalik käikude arv saavutatud või kui võitja on mängureeglite kohaselt tuvastatud
+            return (moveCount === 9 || getWinner() !== null);
+        }
+
+        /**
+         * Mänguvälja lahtri vakantsuse kontroll.
+         **/
+        function isCellPopulated(x, y) {
+            // Tagasta kas massiivi element on midagi muud kui tühi sõne
+            return (BOARD[x][y] !== '');
+        }
+
+        /**
+         * Mänguvälja lahtri populeerimine kindlal koordinaadil soovitud sümboliga.
+         **/
+        function populateTableCell(x, y, character) {
+            BOARD[x][y] = character; // Massiivi elemendi uuendamine - tühi sõne asendatakse mängija sümboliga
+            const element = document.getElementById(`${x}${y}`); // HTML tabelist õige lahtri leidmine ID järgi
+            element.innerHTML = character; // HTML tabelis mängija sümboli kuvamine
+            moveCount++; // Suurenda käikude loendurit
+        }
+
+        /**
+         * Rea tabamuse kontroll.
+         **/
+        function getRowStrikeCharacter() {
+            // Käib kõik 3 rida mänguväljal läbi
+            for (let i = 0; i < 3; i++) {
+                // Kontrolli kas rea esimene lahter on populeeritud ja kas järgnevad kaks sisaldavad ka sama sümbolit
+                if (isCellPopulated(i, 0)
+                    && BOARD[i][0] === BOARD[i][1]
+                    && BOARD[i][0] === BOARD[i][2]) {
+                    return BOARD[i][0]; // Tagasta mängija sümbol, kes on saanud mänguväljal rea
+                }
+            }
+            return null; // Ridadel täistabamust ei leitud, tagasta null
+        }
+
+        /**
+         * Tulba tabamuse kontroll.
+         **/
+        function getColumnStrikeCharacter() {
+            // Käib kõik 3 tulpa mänguväljal läbi
+            for (let i = 0; i < 3; i++) {
+                // Kontrolli kas rea esimene tulba lahter on populeeritud ja kas järgnevad kaks lahtrit tulbas sisaldavad ka sama sümbolit
+                if (isCellPopulated(0, i)
+                    && BOARD[0][i] === BOARD[1][i]
+                    && BOARD[0][i] === BOARD[2][i]) {
+                    return BOARD[0][i];
+                }
+            }
+            return null; // Tulpades täistabamust ei leitud, tagasta null
+        }
+
+        /**
+         * Diagonaali tabamuse kontroll.
+         **/
+        function getDiagonalStrikeCharacter() {
+
+            const topCorners = [[0, 0], [0, 2]]; // Ülemiste nurkade koordinaadid
+
+            // Diagonaale on mänguväljal sama palju kui ülemisi nurki - 2. Kahe iteratsiooniga tsükkel kontrollimaks kas üks diagonaalidest on saanud täistabamuse
+            for (const topCornerCoordinates of topCorners) {
+                const [x, y] = topCornerCoordinates; // Koordinaadid eraldi muutujatesse (ES destructuring assignment)
+                const character = BOARD[x][y]; // Sümbol mängulaualt
+                const lowerDiagonalCornerY = (y > 0 ? 0 : 2); // Nurk ülemise suhtes diagonaalis all
+                // Kontrolli, et mängulaua sümbol ei oleks tühi sõne ja järgnevad kaks lahtrit liikudes mängulaual diagonaalis alla sisaldavad sama sümbolit
+                if (character !== ''
+                    && character === BOARD[1][1] // Mänguvälja keskpunkt
+                    && character === BOARD[2][lowerDiagonalCornerY]) {
+                    return character;
+                }
+            }
+            return null; // Diagonaalides täistabamust ei leitud, tagasta null
+        }
+
+        /**
+         * Tulemuse kuvamine mängijale.
+         **/
+        function showGameResult(winnerSymbol) {
+            // HTML element, kuhu tulemus kuvatakse
+            const resultElement = document.getElementById('game-result');
+
+            // Mitu lühikest IF-lauset (ternary operator) teksti konstrueerimiseks
+            resultElement.innerText = winnerSymbol === null ? 'Viik!' : winnerSymbol === USER_CHARACTER ? 'Sina võitsid!' : 'Vastasmängija võitis!';
+        }
+    </script>
+</body>
+
+</html>

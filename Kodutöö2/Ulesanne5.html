@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="et">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Fibonacci</title>
+</head>
+
+<body>
+    <form>
+        <label for="nthNumberInput">Fibonacci n-number:</label>
+        <!-- max atribuut on seatud põhjusega madalaks, vaata JS funktsiooni kommentaari -->
+        <input id="nthNumberInput" type="number" placeholder="1" min="1" max="25" value="1"> <br><br>
+        <input type="button" id="calculateFibonacciBtn" value="Arvuta">
+    </form>
+
+    <!-- Algselt nähtamatu element -->
+    <p id="result" style="display: none;"></p>
+
+    <script>
+        document.getElementById('calculateFibonacciBtn').addEventListener('click', function () {
+            const resultElement = document.getElementById('result');
+            const inputValue = document.getElementById('nthNumberInput').value;
+            resultElement.innerText = `${inputValue}-s Fibonacci number on ${fibonacciRecursive(inputValue)}.`;
+
+            // Tee result element nähtavaks
+            if (resultElement.style.display === 'none') {
+                resultElement.style.display = 'block';
+            }
+        });
+
+
+        /*
+        * Fibonacci n-arvu arvutamine rekursiooni abil.
+        *
+        * Suure n-arvu arvutamine rekursiooni abil võib arvutile panna liiga suure rekursiooni tõttu tohutu arvutuskoormuse - brauser võib kokku joosta.
+        * Töökindlam meetod kasutades memoizationitm mis jätab varasemalt arvutatud n-arvud meelde: https://medium.com/developers-writing/fibonacci-sequence-algorithm-in-javascript-b253dc7e320e
+        */
+        function fibonacciRecursive(number) {
+            return (number < 2) ? 1 : fibonacciRecursive(number - 1) + fibonacciRecursive(number - 2);
+        }
+    </script>
+</body>
+
+</html>

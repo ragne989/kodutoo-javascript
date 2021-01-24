@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+</head>
+
+<body>
+  <script>
+    let max = 100
+    let printOutNumber = "1"
+    let a = 1
+    let reverse = false
+
+    while (max > 0) {
+      if (a < 10 && !reverse) {
+        console.log(printOutNumber)
+        a++
+        if (a !== 10) {
+          printOutNumber += String(a)
+        } else {
+          reverse = true
+        }
+      } else {
+        if (printOutNumber !== "1") {
+          printOutNumber = printOutNumber.substring(0, printOutNumber.length - 1)
+          if (printOutNumber !== "1") {
+            console.log(printOutNumber)
+          }
+        }
+        a--
+        if (a === 1) {
+          reverse = false
+        }
+      }
+      max--
+
+    }
+  </script>
+</body>
+
+</html>

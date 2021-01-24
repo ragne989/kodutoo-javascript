@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="et">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Palindroom</title>
+    <style>
+        #container {
+            text-align: center;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <div id="container">
+
+        <label for="userInput">Sisesta sõna või fraas:</label>
+        <input id="userInput" type="text">
+
+        <p id="info"></p>
+
+    </div>
+
+    <script>
+        // HTML elemendid Javascriptis kasutamiseks
+        const infoElement = document.getElementById('info');
+        const inputElement = document.getElementById('userInput');
+
+        // Sisestuse kontroll (käivitatakse kohe kui tekstikasti väljal klahvivajutus lõpeb)
+        inputElement.addEventListener('keyup', check);
+
+        // Funktsioon, mis kontrollib kas kasutaja sisestus on palindroom
+        function check() {
+            const userInput = inputElement.value.trim(); // Kasutaja sisestus, trim eemaldab tühikud stringi algusest ja lõpust
+
+            if (userInput === '') { // Tühja sisestuse puhul ei tee midagi
+                return; // return väljub funktsioonist
+            }
+
+            const noWhitespace = userInput.replace(/\s+/gm, ''); // Kasutan regulaaravaldist kõigi sõnade vaheliste tühikute eemaldamiseks 
+            const lowerCase = noWhitespace.toLowerCase(); // Sisestus väikesteks tähtedeks
+            const reversed = lowerCase.split('').reverse().join(''); // Stringi tagurpidi pööramine
+
+            infoElement.innerText = `"${userInput}" ${(lowerCase === reversed ? 'on' : 'ei ole')} palindroom!`; // Kasutajale info kuvamine
+        }
+    </script>
+
+</body>
+
+</html>

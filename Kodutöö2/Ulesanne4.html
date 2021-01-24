@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="et">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Permutatsioonid</title>
+</head>
+
+<body>
+    <label for="permutationInput">Leia permutatsioonid tekstist:</label>
+    <input id="permutationInput" type="text">
+    <input type="button" id="generatePermutationsBtn" value="Leia">
+
+    <p id="results"></p>
+
+    <script>
+        document.getElementById('generatePermutationsBtn').addEventListener('click', function () {
+            const initialValue = document.getElementById('permutationInput').value;
+            const permutations = getAllPermutations(initialValue);
+            document.getElementById('results').innerText
+                = `Leidsin ${permutations.length} permutatsiooni: ${permutations.join(', ')}.`;
+        });
+
+
+        function getAllPermutations(string) {
+            const results = []; // Kõik permutatsioonid kogutakse ühte massiivi
+
+            // Kui sisendparameeter on ühe tähemärgi pikkune, siis sellel permutatsioone pole
+            if (string.length === 1) {
+                return [string]; // Kuna käesoleva funktsiooni väljakutsuja eeldab, et tagastatakse massiiv, siis lihtsalt stringi tagastamise asemel tagastame ühe elemendiga massiivi
+            }
+
+            // Käi sisendparameeter tähthaaval läbi
+            for (let i = 0; i < string.length; i++) {
+                const firstChar = string[i]; // Sisendparameetri esimene tähemärk
+                const charsAfterFirstChar = string.substring(0, i) + string.substring(i + 1); // String, milles ei ole sisendparameetri esimest tähemärki
+                const innerPermutations = getAllPermutations(charsAfterFirstChar); // Rekursiivselt leia nn sisemised permutatsioonid 
+
+                // Käi kõik saadud sisemised permutatsioonid läbi
+                for (let j = 0; j < innerPermutations.length; j++) {
+                    results.push(firstChar + innerPermutations[j]); // Lisa esimesele tähemärgile sisemine permutatsioon
+                }
+            }
+            return results.sort(); // Tagastab sorditud permutatsioonide massiivi: https://www.w3schools.com/jsref/jsref_sort.asp
+        }
+
+    </script>
+</body>
+
+</html>

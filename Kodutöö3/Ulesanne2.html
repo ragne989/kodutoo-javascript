@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="et">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eesti IBAN validaator</title>
+    <style>
+        #container {
+            margin: 20px auto;
+            text-align: center;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div id="container">
+        <h1>Eesti IBAN validaator</h1>
+        <label for="iban-input">IBAN:</label>
+        <input id="iban-input" type="text">
+        <input type="button" id="validate-iban" value="Valideeri">
+
+        <p id="validation-result"></p>
+    </div>
+
+    <script>
+        const ESTONIAN_IBAN_REGEX = /^EE\d{18}$/i; // Regulaaravaldis Eesti IBAN kontrolliks. Sõne peab algama EE-ga ja sellele peab järgnema 18 numbrit.
+
+        const ibanInputElement = document.getElementById('iban-input'); // Tekstivälja element HTML-st
+        const validateIbanButtonELement = document.getElementById('validate-iban'); // Valideerimise nupp HTML-st
+
+        // Valideerimise nupuvajutus
+        validateIbanButtonELement.addEventListener('click', () => {
+            const potentialIBAN = ibanInputElement.value.replace(/\s+/g, '').toUpperCase(); // IBAN sisend + eemalda kõik üleliigsed tühikud ja muuda sõnes sisalduvad tähed läbivateks suurtähtedeks
+
+            // Tulemuse kuvamine kasutajale lähtuvalt valideerimise tulemusest
+            document.getElementById('validation-result')
+                .innerText = `Sisestatud IBAN ${isValidIBAN(potentialIBAN) ? 'on' : 'ei ole'} korrektne!`;
+        });
+
+        /**
+         * IBAN valideerimine. Tagastab boolean väärtuse (true | false).
+         **/
+        function isValidIBAN(potentialIBAN) {
+            // Esimene sammuna kontrollime, kas sisend vastab regulaaravaldisele
+            if (!ESTONIAN_IBAN_REGEX.test(potentialIBAN)) {
+                return false; // Kui sisend regulaaravaldisele ei vasta, siis edasist kontrolli ei ole mõtet teha ja tagastame koheselt false.
+            }
+
+            const countryCode = potentialIBAN.substring(0, 2); // Riigi kood on 2 esimest tähemärki ehk EE
+            const checkSum = potentialIBAN.substring(2, 4); // IBAN kontrollnumber on kahekohaline number kohe pärast riigikoodi
+            const BBAN = potentialIBAN.substring(4); // Riiklik konto number e Basic Bank Account Number - BBAN
+
+            /**
+             * IBAN spetsifikatsioon ütleb, et IBAN esimesed 4 sümbolit peab liigutama IBAN stringi lõppu. 
+             * Teisisõnu riigi kood ja kontrollnumber tuleb tõsta riikliku konto numbri järele. 
+             * 
+             * Sealhulgas kõik IBAN-s sisalduvad tähemärgid tuleb asendada numbriga, kus  A = 10, B = 11, ..., Z = 35.
+             * E-tähemärk tuleb selle alusel asendada numbriga 14.
+             * 
+             * https://en.wikipedia.org/wiki/International_Bank_Account_Number#Validating_the_IBAN
+             **/
+            const restructuredIBAN = `${BBAN}1414${checkSum}`;
+
+            console.log(countryCode, checkSum, BBAN, restructuredIBAN);
+
+            /**
+             * Saadud numbriline string tuleb teisendada täisarvuks ja teostada mod 97 arvutus (arv % 97). 
+             * Kui arvutuse tulemusel on jääk 1, siis IBAN valideerub.
+             * 
+             * Arvutite puhul ei ole seda arvutust nii lihtne teostada, 
+             * kuna eelnevas sammus kokku pandud numbrilist sõne ei saa täisarvuks konvertida selle numbri suuruse tõttu.
+             * 
+             * Kõrgeim täisarv, mida Javascriptis kasutada saab on 9007199254740991. 
+             * Seda numbrit saab kontrollida Javascriptis kui käivitada avaldis: Number.MAX_SAFE_INTEGER
+             * 
+             * Matemaatiliselt saab antud probleemi lahendada ka kui teostada arvutus väiksemate osadena. 
+             * Selleks olen loonud funktsiooni mod97.
+             * 
+             * https://en.wikipedia.org/wiki/International_Bank_Account_Number#Example
+             **/
+            return mod97(restructuredIBAN) === 1; // Tagasta true/false vastavalt kas mod 97 arvutuse tulemus on 1
+        }
+
+        /**
+         * Mod 97 arvutus suurte arvudega.
+         **/
+        function mod97(numericString) {
+            let checksum = numericString.slice(0, 2);
+
+            for (let offset = 2; offset < numericString.length; offset += 7) {
+                const fragment = `${checksum}${numericString.substring(offset, offset + 7)}`;
+                checksum = parseInt(fragment, 10) % 97;
+            }
+            return checksum;
+        }
+    </script>
+</body>
+
+</html>

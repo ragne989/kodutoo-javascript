@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="et">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kehamassiindeksi kalkulaator</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+    <div class="container">
+        <div class="p-5 mt-5 mx-auto border border-light rounded shadow">
+            <h1 class="display-4">KMI <small>kalkulaator</small></h1>
+            <div class="mt-4">
+                <span class="badge badge-primary">Kehakaal <span id="weight-indicator">50</span> kg</span>
+                <input id="weight-slider" class="custom-range" type="range" min="1" max="250" step=".1" value="50">
+                <span class="badge badge-info">Pikkus <span id="height-indicator">150</span> cm</span>
+                <input id="height-slider" class="custom-range" type="range" min="1" max="300" step=".5" value="150">
+            </div>
+            <div class="mt-3">
+                <span>Sinu KMI:</span>
+                <span id="bmi-result" class="font-weight-bold">22.22</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/jquery.min.js" type="text/javascript"></script>
+    <script src="js/bootstrap.min.js" type="text/javascript"></script>
+
+    <script>
+        const heightRangeSliderElement = document.getElementById('height-slider');
+        const weightRangeSliderElement = document.getElementById('weight-slider');
+        const heightIndicatorElement = document.getElementById('height-indicator');
+        const weightIndicatorElement = document.getElementById('weight-indicator');
+        const calculationResultElement = document.getElementById('bmi-result');
+
+        reloadRecentValuesFromLocalStorage();
+        addInputEventListener(weightRangeSliderElement, weightIndicatorElement);
+        addInputEventListener(heightRangeSliderElement, heightIndicatorElement);
+
+        function addInputEventListener(element, indicator) {
+            element.addEventListener('input', (event) => {
+                indicator.textContent = +event.target.value;
+                calculationResultElement.textContent = calculateBMI();
+
+                persistSelection(heightRangeSliderElement.value, weightRangeSliderElement.value);
+            });
+        }
+
+        function calculateBMI() {
+            const weightInKilograms = +weightRangeSliderElement.value;
+            const heightInMeters = +heightRangeSliderElement.value / 100;
+            return (weightInKilograms / Math.pow(heightInMeters, 2)).toFixed(2);
+        }
+
+        function reloadRecentValuesFromLocalStorage() {
+            const valuesFromLocalstorage = localStorage.getItem('lastSelectedValues');
+            if (valuesFromLocalstorage !== null) {
+                const { heightSliderValue, weightSliderValue } = JSON.parse(valuesFromLocalstorage);
+
+                weightIndicatorElement.textContent = weightSliderValue;
+                heightIndicatorElement.textContent = heightSliderValue;
+                
+                weightRangeSliderElement.value = weightSliderValue;
+                heightRangeSliderElement.value = heightSliderValue;
+                calculationResultElement.textContent = calculateBMI();
+            }
+        }
+
+        function persistSelection(heightSliderValue, weightSliderValue) {
+            localStorage.setItem('lastSelectedValues', JSON.stringify({ weightSliderValue, heightSliderValue }));
+        }
+    </script>
+</body>
+
+</html>

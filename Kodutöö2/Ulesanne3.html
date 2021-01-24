@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="et">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Iseloomustus</title>
+</head>
+
+<body>
+    <label for="recommendation">Iseloomustus:</label><br>
+
+    <!-- readonly atribuut tähendab, et element on kirjutuskaitstud e tekstikasti sisu ei saa redigeerida -->
+    <textarea id="recommendation" rows="15" cols="80" readonly>
+Arendaja Pinu on töötaja, kelle leiate enamasti 
+uusi lahendusi loomas. Pinu töötab väga efektiivselt, ega käi 
+tööaega kolleegidega kohvitamise peale raiskamas. Reeglina on 
+ta lahkesti nõus kolleege juhendama, ning kunagi ei jää seetõttu 
+tal tööülesanded tähtajaks täitmata. Tihti peab aeganõudvaid lisa- 
+kohustusi ja oma oskuste täiendamist tähtsamaks kui kohvi- 
+pause. Teda iseloomustab tõsiasi, et tal pole vähimalgi määral 
+edevust, olgugi et ta on demonstreerinud äärmiselt põhjalikke 
+erialaseid teadmisi. Olen kindlalt veendunud, et Pinu ei ole 
+osakonnas mitte ainult vajalik, vaid noorusele vaatamata lausa 
+asendamatu töötaja. Soovitan juhatusel Pinu tingimata 
+edutada, mis võib omakorda ka teistes töötajates motivatsioonipuhangu
+vallandada!
+    </textarea><br>
+
+    <button id="decipherBtn" onclick="decipher()">Dešifreeri</button><br>
+
+    <script>
+        function decipher() {
+            const recommendationTxtAreaElement = document.getElementById('recommendation');
+            const originalRecommendationRows = recommendationTxtAreaElement.value.split('\n'); // split lõhub teksti soovitud separaatori alusel massiiviks, antud juhul on separaatoriks reavahetus
+            const decipheredRecommendationTxtArea = recommendationTxtAreaElement.cloneNode(true); // Klooni olemasolev tekstikast
+            let decipheredText = '';
+
+
+            // Loo uus tekst lisades sinna vaid paaritud read
+            for (let i = 0; i < originalRecommendationRows.length; i += 2) {
+                decipheredText += originalRecommendationRows[i] + '\n'; // \n on javascriptis spetsiaalne tähemärk, mis tähendab reavahetust (newline), langev kaldkriips on escape-character https://www.w3schools.com/js/js_strings.asp
+            }
+
+            decipheredRecommendationTxtArea.value = decipheredText; // Dešifreeritud teksti lisamine kloonitud tekstikasti
+            decipheredRecommendationTxtArea.id = 'decipheredRecommendation'; // Kuna uus tekstikast on kloonitud, siis tuleb muuta selle ID kuna originaali ID tuli sellega kloonimisel kaasa. Korrektses HTML-s ei tohi sama ID'ga elemente olla.
+            document.body.appendChild(decipheredRecommendationTxtArea); // Lisa uus tekstikast HTML <body> tagide vahele viimaseks elemendiks
+
+            document.getElementById('decipherBtn').disabled = true; // Keela nupuvajutus, et uusi tekstikaste nupuvajutusel ei loodaks
+        }
+    </script>
+</body>
+
+</html>

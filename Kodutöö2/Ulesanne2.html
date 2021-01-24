@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="et">
+
+<head>
+    <title>Kingiloos</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        #participants {
+            margin: 35px auto;
+            text-align: center;
+            border-top: darkgray 1px solid;
+        }
+
+        #results {
+            margin: 30px auto;
+            text-align: center;
+            border-top: darkgray 1px solid;
+        }
+
+        #wrapper {
+            margin: 44px auto;
+            text-align: center;
+            width: 300px;
+            border: 1px solid #c7c4c4;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        table {
+            margin: 20px auto;
+            min-width: 60%;
+        }
+
+        table caption {
+            font-weight: bold;
+        }
+
+        .initially-hidden {
+            display: none;
+        }
+
+        .delete-participant-btn {
+            background-color: red;
+            font-weight: bold;
+            border: 1px solid #c7c4c4;
+            border-radius: 5px;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div id="wrapper">
+        <h1>Kingiloos</h1>
+
+        <input id="participantNameInput" type="text" placeholder="Osaleja nimi" aria-label="osaleja nimi">
+        <button id="addParticipantBtn" type="button" disabled>Lisa</button>
+
+        <div id="participants" class="initially-hidden">
+            <table id="participantsTable">
+                <caption>Loosis osalejad</caption>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+
+        <button id="raffleBtn" class="initially-hidden" type="button">Loosi</button>
+
+        <div id="results" class="initially-hidden">
+            <table id="raffleResultsTable">
+                <caption>Loosimise tulemused</caption>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+
+        const participantNameInput = document.getElementById('participantNameInput');
+
+        const addParticipantBtn = document.getElementById('addParticipantBtn');
+        const raffleBtn = document.getElementById('raffleBtn');
+
+        const participantsTable = document.getElementById('participantsTable');
+        const raffleResultsTable = document.getElementById('raffleResultsTable');
+
+        const participantsDiv = document.getElementById('participants');
+        const resultsDiv = document.getElementById('results');
+
+        const participants = [];
+
+        participantNameInput.addEventListener('keyup', function (e) {
+            const trimmedValue = this.value.replace(/\s+/g, ''); // "this" refers to the element itself
+
+            // Check if pressed key was ENTER, if so then add participant without clicking the button
+            if ((e.key === 'Enter' || e.keyCode === 13) && trimmedValue !== '') {
+                addParticipant(this.value.trim());
+                this.value = ''; // Clear the participant input
+            }
+            addParticipantBtn.disabled = this.value === ''; // Enable or disable button based on input value
+        });
+
+        addParticipantBtn.addEventListener('click', function () {
+            addParticipant(participantNameInput.value.trim());
+            participantNameInput.value = '';
+            this.disabled = true;
+            participantNameInput.focus();
+        });
+
+        raffleBtn.addEventListener('click', function () {
+            giftRaffle();
+        });
+
+        function addParticipant(name) {
+            participants.push(name);
+            updateParticipantsTable(participants);
+        }
+
+        function removeParticipant(participantIndex) {
+            participants.splice(participantIndex, 1);
+            updateParticipantsTable(participants);
+        }
+
+        function giftRaffle() {
+            const raffleResults = raffle(participants);
+            updateRaffleResultsTable(raffleResults);
+        }
+
+        function updateParticipantsTable(participantsArray) {
+            const tableBody = participantsTable.tBodies[0]; // Get table body
+            participantsDiv.style.display = 'none'; // Hide participants div
+            tableBody.innerHTML = ''; // Delete everything from table body
+
+            participantsArray.forEach(function (participant, index) {
+                const tableRow = tableBody.insertRow(-1); // Insert new row to the end table body
+                const nameCell = tableRow.insertCell(0); // Insert column cell to row for displaying participant name
+                const deleteBtnCell = tableRow.insertCell(1); // Insert column cell to row for delete participant button
+                nameCell.innerHTML = participant; // Set participant name
+                deleteBtnCell.appendChild(createParticipantDeleteButton(index)); // Create and set the button
+            });
+
+            if (participantsArray.length > 0) {
+                // if there is something in the participants array reveal the partcipants list, otherwise it will remain hidden
+                participantsDiv.style.display = 'block';
+            }
+
+            // show raffle button only if there are at least 2 participants
+            raffleBtn.style.display = participantsArray.length > 1 ? 'inline-block' : 'none';
+        }
+
+        function updateRaffleResultsTable(raffleResultsArray) {
+            const tableBody = raffleResultsTable.tBodies[0]; // Get table body
+            resultsDiv.style.display = 'none'; // Hide table
+            tableBody.innerHTML = ''; // Delete everything from table body
+
+            raffleResultsArray.forEach(function (pair, index) {
+                const sender = pair[0]; // first element of the pair array is the gift sender
+                const recipient = pair[1]; // second element of the pair array is the gift recipient
+
+                const tableRow = tableBody.insertRow(-1); // Insert new row to the end of the table body
+                const senderNameCell = tableRow.insertCell(0); // Insert column cell to row for displaying gift sender name
+                const arrowSymbolCell = tableRow.insertCell(1); // Insert column cell to row for displaying arrow symbol
+                const recipientNameCell = tableRow.insertCell(2); // Insert column cell to row for gift receiver name
+                senderNameCell.innerHTML = sender; // Set sender name
+                arrowSymbolCell.innerHTML = '&rarr;	&#127873; &rarr;'; // Set arrow symbol
+                recipientNameCell.innerHTML = recipient; // Set arrow symbol
+            });
+
+            if (raffleResultsArray.length > 0) {
+                // if there is something in the raffle results array reveal the results, otherwise it will remain hidden
+                resultsDiv.style.display = 'block';
+            }
+        }
+
+        function createParticipantDeleteButton(participantIndex) {
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className += 'delete-participant-btn';
+            deleteBtn.type = 'button';
+            deleteBtn.innerHTML = '&times;';
+            deleteBtn.onclick = function () { removeParticipant(participantIndex); };
+            deleteBtn.title = `Eemalda ${participants[participantIndex]}`;
+
+            return deleteBtn;
+        }
+
+        /**
+        * Raffle unique pairs.
+        * 
+        * @param {array} items Array of participants.
+        * @returns {Array|Boolean}
+        */
+        function raffle(items) {
+            // At least 2 items needed to raffle
+            if (items.length < 2) {
+                return false;
+            }
+
+            items = shuffle(items);  // Add randomness by shuffling the items array
+            let pairs = []; // Array of raffled pairs
+            let recipients = []; // Array for keeping track who is already randomly picked as recipient (can't pick the same again)
+            for (let i = 0; i < items.length; i++) {
+                let copy = items.slice(); // Make a copy of items
+                copy.splice(i, 1); // Remove current element so it can't be randomly picked as recipient     
+                // Also remove elements that are already in recipients array
+                if (recipients.length > 0) {
+                    copy = copy.filter(function (item) {
+                        return !recipients.includes(item);
+                    });
+                }
+                // Pick random element from remaining elements   
+                let recipient = (copy.length > 1) ? copy[Math.floor(Math.random() * copy.length)] : (copy.length === 1) ? copy[0] : false;
+                // Perform random recipient substitution if item's recipient equals itself (no other option remains)
+                if (recipient === false) {
+                    let randomPair = pairs[Math.floor(Math.random() * pairs.length)];
+                    recipient = randomPair[1];
+                    randomPair[1] = items[i];
+                }
+                pairs.push([items[i], recipient]); // Add pair to pairs array
+                recipients.push(recipient); // Add recipient to recipients array
+            }
+            return pairs;
+        }
+
+        /**
+         * Shuffle elements in array.
+         * 
+         * @param {array} array Items to shuffle.
+         * @returns {array} Shuffled array.
+         */
+        function shuffle(array) {
+
+            let m = array.length, t, i;
+            // While there remain elements to shuffle…
+            while (m) {
+                // Pick a remaining element…
+                i = Math.floor(Math.random() * m--);
+
+                // And swap it with the current element.
+                t = array[m];
+                array[m] = array[i];
+                array[i] = t;
+            }
+            return array;
+        }
+    </script>
+</body>
+
+</html>

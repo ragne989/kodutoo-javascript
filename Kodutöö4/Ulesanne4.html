@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="et">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript | Vanuse validaator</title>
+</head>
+
+<body>
+<label for="age-input">Sisesta vanus:</label>
+<input id="age-input" type="number" min="1" max="130">
+<button id="age-validation-btn">Valideeri</button>
+<p id="validation-result"></p>
+<script>
+    document.getElementById('age-validation-btn').addEventListener('click', () => {
+        const input = document.getElementById('age-input');
+        const validationResult = isAgeValid(parseInt(input.value));
+        document.getElementById('validation-result').textContent = `Vanus ${input.value} ${validationResult ? 'valideerub' : 'ei valideeru'}!`;
+    });
+
+    function isAgeValid(age) {
+        return age >= 18 && age < 100;
+    }
+</script>
+</body>
+
+</html>

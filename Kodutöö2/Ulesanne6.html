@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="et">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Korrutustabel</title>
+
+    <!-- Korrutustabeli küljendus -->
+    <style>
+        #container {
+            margin: 20px auto;
+            text-align: center;
+        }
+
+        table {
+            border-spacing: 0px;
+            margin: 20px auto;
+        }
+
+        table td {
+            border: 1px solid #e8e8e8;
+            text-align: center;
+            height: 40px;
+            min-width: 40px;
+            max-width: 40px;
+        }
+
+        .lightblue-bg {
+            background-color: #f2f8fc;
+        }
+
+        .blue-bg {
+            background-color: #0070c8;
+            color: #eff6fc;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <div id="container">
+        <!-- Korrutustabeli genereerimise lihtsustamiseks -->
+        <label for="multiplicationTableSizeInput">Korrutustabeli suurus:</label>
+        <input id="multiplicationTableSizeInput" type="number" min="1" max="100" value="10">
+        <input type="button" id="generateMutiplicationTableBtn" value="Genereeri">
+    </div>
+
+    <script>
+        document.getElementById('generateMutiplicationTableBtn').addEventListener('click', function () {
+            const multiplicationTableSize = document.getElementById('multiplicationTableSizeInput').value;
+            generateMultiplicationTable(multiplicationTableSize);
+        });
+
+
+        function generateMultiplicationTable(size) {
+            const table = document.createElement('table');
+
+            for (let i = 0; i <= size; i++) { // Esimene tsükkel tekitab ridu ülalt alla
+                const row = table.insertRow(-1); // -1 tähendab, et lisa rida tabeli lõppu
+
+                for (let j = 0; j <= size; j++) { // Teine tsükkel tekitab reale tulpasid vasakult paremale
+                    const cell = row.insertCell(-1); // -1 tähendab, et lisa ruut rea lõppu
+
+                    // Vasak ülemine ruut, kuhu paneme "x" sümboli
+                    if (i === 0 && j === 0) {
+                        cell.innerHTML = '&times;'; // &times; on HTML entity tähemärk, rohkem https://dev.w3.org/html5/html-author/charref
+                        cell.classList.add('blue-bg'); // Lisame ruudule klassi, mille küljendus on CSS-s defineeritud tumesinise taustaga
+                        cell.style.fontSize = '25px';
+                    } else if (i === 0 && j > 0) { // Ülemine esimene rida alates teisest tulbast
+                        cell.innerText = j;
+                        cell.classList.add('blue-bg');
+                    } else if (j === 0 && i > 0) { // Vasak esimene tulp alates teisest reast
+                        cell.innerText = i;
+                        cell.classList.add('blue-bg');
+                    } else {
+                        cell.innerText = i * j; // Korrutis
+                        cell.classList.add('lightblue-bg'); // Lisame ruudule klassi, mille küljendus on CSS-s defineeritud helesinise taustaga
+                    }
+
+                    // Langev diagonaal
+                    if (i === j) {
+                        cell.style.fontWeight = 'bold';
+                    }
+                }
+            }
+
+            // Lisame <body> elemendile genereeritud <table> elemendi
+            document.body.appendChild(table);
+        }
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="et">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Pakitud binaarkood</title>
+</head>
+
+<body>
+    <label for="compressedBinary">Pakitud binaarkood:</label>
+    <p id="compressedBinary">
+        02101403101303101303150312021203101301041201041021021302120101021031202103120214010312013010312021201010310101201041021301203120120214010210120102103120312021201031202120310210120102120210
+    </p>
+
+    <button id="decompressBinaryBtn">Paki lahti</button>
+
+    <!-- Algselt nähtamatud elemendid -->
+    <p id="decompressedBinary" style="display: none;"></p>
+    <button id="binaryToTextBtn" style="display: none;">Binaarkood tekstiks</button>
+    <p id="binaryAsTxt" style="display: none;"></p>
+
+    <script>
+        const decompressBinaryBtnElement = document.getElementById('decompressBinaryBtn');
+        const binaryToTextBtnElement = document.getElementById('binaryToTextBtn');
+        const decompressedBinaryElement = document.getElementById('decompressedBinary');
+
+
+        decompressBinaryBtnElement.addEventListener('click', function () {
+            const compressedBinaryStringElement = document.getElementById('compressedBinary');
+
+            const binaryString = decompressBinaryString(compressedBinaryStringElement.innerText);
+            decompressedBinaryElement.innerText = binaryString;
+
+            // Tee vajalikud elemendid nähtavaks
+            decompressedBinaryElement.style.display = 'block';
+            binaryToTextBtnElement.style.display = 'block';
+        });
+
+        binaryToTextBtnElement.addEventListener('click', function () {
+            const binaryAsTxtElement = document.getElementById('binaryAsTxt');
+
+            const text = binaryStringToText(decompressedBinaryElement.innerText);
+            binaryAsTxtElement.innerText = text;
+
+            // Tee binaryAsTxtElement element nähtavaks
+            binaryAsTxtElement.style.display = 'block';
+        });
+
+        function decompressBinaryString(compressedBinaryString) {
+            let binaryString = '';
+
+            // Tsükkel käib compressedBinaryString sümbol haaval läbi
+            for (let i = 0; i < compressedBinaryString.length; i++) {
+
+                const currentDigit = compressedBinaryString.charAt(i); // string on tähemärkide massiiv, charAt võtab tähemärgi stringist, mis asub etteantud indeksil
+                const currentDigitAsInt = parseInt(currentDigit); // parseInt funktsioon on stringi kujul numbri täisarvuks teisendamiseks
+                /*
+                 * Kontrolli kas number on >= 2. 
+                 * Kui tõene, siis genereeritakse tsükli abil vastaval arvul charAt(i + 1) sümboleid ja lisatakse binaryString stringile
+                 */
+                if (currentDigitAsInt >= 2) {
+                    const nextDigit = compressedBinaryString.charAt(i + 1);
+                    for (let j = 0; j < currentDigitAsInt; j++) {
+                        binaryString += nextDigit;
+                    }
+                    i++;
+                } else {
+                    binaryString += currentDigit;
+                }
+            }
+            return binaryString;
+        }
+
+        function binaryStringToText(binaryString) {
+
+            binaryString = binaryString.replace(/\s+/g, ''); // Eemalda tühikud, regex g lipukesest: https://www.w3schools.com/jsref/jsref_regexp_g.asp
+            let retVal = '';
+
+            // Kontrollib regexi abil kas tekst sisaldab ainult 1 ja 0 ning kas binaarkoodi string jagub 8'ga (väga primitiivne binaarkoodi kontroll)
+            if (/^[01]+$/g.test(binaryString) && binaryString.length % 8 === 0) {
+
+                const eightCharChunks = binaryString.match(/.{1,8}/g); // Lõhub regexi abil stringi 8-tähemärgiga stringide massiiviks.
+
+                for (let i = 0; i < eightCharChunks.length; i++) {
+                    retVal += String.fromCharCode(parseInt(eightCharChunks[i], 2)); // Teeb kahendkoodist täisarvu ja sellest omakorda vastava tekstilise sümboli
+                }
+            }
+            return retVal;
+        }
+    </script>
+
+</body>
+
+</html>

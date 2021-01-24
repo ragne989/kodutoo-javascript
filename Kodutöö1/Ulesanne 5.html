@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+</head>
+
+<body>
+  <h1>Punktid <span id="points"></span></h1>
+  Sisesta Number 1-<span id="max-number"></span>ni <input id="game1">
+  <button onclick="getGameOneNumber()">submit</button>
+  <button onclick="resetGame()">Alusta uuesti</button>
+  <h1 id="result"></h1>
+  <h1 id="level"></h1>
+
+
+  <script>
+    let gamePoints = 0
+    let retryCount = 3
+    let maxNumber = 10
+    let level = 1
+
+
+    document.getElementById("points").innerHTML = "<span>" + gamePoints + "</span>"
+    document.getElementById("max-number").innerHTML = "<span>" + maxNumber + "</span>"
+    document.getElementById("level").innerHTML = "<span> Tase: " + level + "</span>"
+
+    let randomNumber = Math.floor(Math.random() * 10)
+
+    function getGameOneNumber() {
+      retryCount--
+      const inputValue = document.getElementById("game1").value
+
+      if (retryCount) {
+        if (randomNumber === +inputValue) {
+          gamePoints++
+          console.log('Sa võitsd', gamePoints)
+          document.getElementById("result").innerHTML = "Sa võitsid, number oli " + randomNumber
+          document.getElementById("points").innerHTML = "<span>" + gamePoints + "</span>"
+
+
+          maxNumber += 10
+          randomNumber = Math.floor(Math.random() * maxNumber)
+          document.getElementById("max-number").innerHTML = "<span>" + maxNumber + "</span>"
+          newLevel()
+
+        } else {
+          console.log(randomNumber)
+          if (randomNumber > +inputValue) {
+            console.log('Number on suurem')
+            document.getElementById("result").innerHTML = "Number on suurem"
+          } else {
+            console.log('Number on väiksem')
+            document.getElementById("result").innerHTML = "Number on väiksem"
+          }
+
+        }
+      } else {
+        console.log('Sa kaotasid !')
+        document.getElementById("result").innerHTML = "Sa kaotasid, number oli " + randomNumber
+      }
+
+    }
+
+    function newLevel() {
+      retryCount = 3
+      level++
+      document.getElementById("level").innerHTML = "<span> Tase: " + level + "</span>"
+    }
+
+    function resetGame() {
+      retryCount = 3
+      level = 1
+      maxNumber = 10
+      gamePoints = 0
+
+      document.getElementById("points").innerHTML = "<span>" + gamePoints + "</span>"
+      document.getElementById("max-number").innerHTML = "<span>" + maxNumber + "</span>"
+      document.getElementById("level").innerHTML = "<span> Tase: " + level + "</span>"
+      document.getElementById("result").innerHTML = ""
+      document.getElementById("game1").value = ""
+    }
+
+  </script>
+</body>
+
+</html>
